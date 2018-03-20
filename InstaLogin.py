@@ -1,6 +1,19 @@
-import os
+from Instagram.Admin.FileLocator import locate
 from selenium.webdriver.common.action_chains import ActionChains
 import time
+
+
+def credentials(filename):
+
+    path = locate(filename)
+              
+    with open(path, 'r') as f:
+        content = f.readlines()
+        content = [x.strip() for x in content]
+        
+    return(content)
+
+
 
 def login(driver, username, password):
     
@@ -24,14 +37,3 @@ def login(driver, username, password):
        
     time.sleep(1)
     
-def credentials(filename):
-    cwd = os.getcwd()
-    for r,d,f in os.walk(cwd):
-        for files in f:
-            if files == filename:
-                path = os.path.join(r,files)
-              
-    with open(path, 'r') as f:
-        content = f.readlines()
-        content = [x.strip() for x in content]
-    return(content)
