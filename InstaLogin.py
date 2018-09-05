@@ -18,11 +18,9 @@ def credentials(filename):
 def login(driver, username, password):
     
     ## Go to Instagram:
-    driver.get("http://instagram.com")
-
-    ## Find the Log In button and click on it:
-    login_link = driver.find_element_by_link_text('Log in')
-    ActionChains(driver).move_to_element(login_link).click().perform()
+    driver.get("https://www.instagram.com/accounts/login/")
+    
+    time.sleep(2)
     
     ## Enter your username:
     input_username = driver.find_elements_by_xpath("//input[@name='username']")
