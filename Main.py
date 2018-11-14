@@ -1,7 +1,7 @@
 
 
 #####################################################################################
-#### Create class for the posts:
+#### Create class for the posts data:
 class Post:
     def __init__(self, link, account, date, media_type, media_link, 
                  description = None, location = None, loc_link = None, likes = None):
@@ -160,7 +160,6 @@ time.sleep(4)
 
 #### Scrape data for each post 
 driver.execute_script("window.scrollTo(0, 1)") # need to scroll a bit for the article element to appear
-time.sleep(2)
 article_elem_init = driver.find_elements_by_xpath("//article") # using this to base the scrape count
 list_data = []
 scrape(article_elem_init, list_data) # run this as many times as you want (maybe automate with a function)
@@ -193,7 +192,7 @@ def PickleData(df):
 
 #### Create a class for location data:        
 class Location:
-    def __init__(self, location, loc_link, lat, lon, city, country, street, website, phone, desc_posts):
+    def __init__(self, location, loc_link, lat, lon, street, city, country):
         self.location = location
         self.loc_link = loc_link
         self.lat = lat
@@ -201,22 +200,15 @@ class Location:
         self.street = street
         self.city = city
         self.country = country
-        self.website = website
-        self.phone = phone
-        self.desc_posts = desc_posts
     
     def to_dict(self):
         return {'Location': self.location, 
                  'Location Link': self.loc_link, 
                  'Lat': self.lat,
                  'Lon': self.lon,
-                 'City': self.city,
-                 'Country': self.country,
                  'Street': self.street,
-                 'Website': self.website,
-                 'Phone': self.phone,
-                 'Posts Descriptions': self.desc_posts
-                 } 
+                 'City': self.city,
+                 'Country': self.country} 
                                 
 #### Remove posts without location:
 df_loc = df[df.Location!='No location'].reset_index(drop=True)
@@ -243,53 +235,18 @@ for position,link in enumerate(loc_distinct['Location Link']):
         if city == loc_distinct['Location'][position]:
             lat = None
             lon = None
-            street = 'Location is too general'
+            street = None
             country = json.loads(j['entry_data']['LocationsPage'][0]['graphql']['location']['address_json'])['country_code']
-            website = j['entry_data']['LocationsPage'][0]['graphql']['location']['website']
-            phone = j['entry_data']['LocationsPage'][0]['graphql']['location']['phone']
-            posts = j['entry_data']['LocationsPage'][0]['graphql']['location']['edge_location_to_media']['edges']
-            n = 0
-            desc_posts = []
-            while n < len(posts):
-                try:
-                    desc_posts.append(j['entry_data']['LocationsPage'][0]['graphql']['location']['edge_location_to_media']['edges'][n]['node']['edge_media_to_caption']['edges'][0]['node']['text']) 
-                except:
-                    pass
-                n+=1
         else:
             lat = j['entry_data']['LocationsPage'][0]['graphql']['location']['lat']
             lon = j['entry_data']['LocationsPage'][0]['graphql']['location']['lng']
             street = json.loads(j['entry_data']['LocationsPage'][0]['graphql']['location']['address_json'])['street_address']
             country = json.loads(j['entry_data']['LocationsPage'][0]['graphql']['location']['address_json'])['country_code']
-            website = j['entry_data']['LocationsPage'][0]['graphql']['location']['website']
-            phone = j['entry_data']['LocationsPage'][0]['graphql']['location']['phone']
-            posts = j['entry_data']['LocationsPage'][0]['graphql']['location']['edge_location_to_media']['edges']
-            n = 0
-            desc_posts = []
-            while n < len(posts):
-                try:
-                    desc_posts.append(j['entry_data']['LocationsPage'][0]['graphql']['location']['edge_location_to_media']['edges'][n]['node']['edge_media_to_caption']['edges'][0]['node']['text']) 
-                except:
-                    pass
-                n+=1
-        loc_data.append(Location(loc_distinct['Location'][position], link, lat, lon, city, country, street, website, phone, desc_posts))
+    
+        loc_data.append(Location(location, loc_link, lat, lon, street, city, country))
     
     except:
-        print('Error with ',link)
-
-
-#### Create a dataframe:
-df_loc_detail = pd.DataFrame([s.to_dict() for s in loc_data])
-df_loc_detail = df_loc_detail[ df_loc_detail.Street != 'Location is too general' ]
-
-
-#### Flag the locations that are not related to food:
-
-   
-      
-            
-#num_likes = j['entry_data']['LocationsPage'][0]['graphql']['location']['edge_location_to_media']['edges'][n]['node']['edge_liked_by']['count']
-#num_comments = j['entry_data']['LocationsPage'][0]['graphql']['location']['edge_location_to_media']['edges'][n]['node']['edge_media_to_comment']['count']
+        print('Error')
 
 
 '''
