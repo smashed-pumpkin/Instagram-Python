@@ -172,21 +172,7 @@ import datetime
 df = pd.DataFrame([s.to_dict() for s in list_data]).drop_duplicates().reset_index()
 df['Date of scrape'] = datetime.datetime.today().strftime('%Y-%m-%d %H:%M')
 
-
-#### Check if the file exists and pickle the data:
-def PickleData(df):
-    nowDate = pd.datetime.today()
-    count=0
-    for o in [x for x in os.listdir('Instagram\\Data') if x.endswith(".pkl")]:
-        if nowDate.strftime("%y%m%d") in o:
-            count+=1
-    if count==0:
-        pickle.dump( df, open( 'Instagram\\Data\\'+str(login_info[0])+nowDate.strftime("%y%m%d")+'.pkl', "wb" ) )
-        return('Data has been pickled and saved as: '+'Instagram\\Data\\'+str(login_info[0])+nowDate.strftime("%y%m%d")+'.pkl')
-    else:
-        pickle.dump( df, open( 'Instagram\\Data\\'+str(login_info[0])+nowDate.strftime("%y%m%d")+' ('+str(count)+').pkl', "wb" ) )
-        return('Data has been pickled and saved as: '+'Instagram\\Data\\'+str(login_info[0])+nowDate.strftime("%y%m%d")+' ('+str(count)+').pkl')
-        
+ 
         
 #####################################################################################
 #### Clean up the location data:
@@ -224,16 +210,24 @@ print(df_loc.head(5))
 
 
 #### Remove posts without specific locations:
+loc_distinct = df_loc[['Location','Location Link']].drop_duplicates().reset_index()
+
+
+#### Download info about each unique location and identify the ones that are just cities:
+from user_agent import generate_user_agent
 import requests
 from bs4 import BeautifulSoup
 import re
 import json
 
-loc_distinct = df_loc[['Location','Location Link']].drop_duplicates().reset_index()
 loc_data = []
 for position,link in enumerate(loc_distinct['Location Link']): 
-    url = link 
-    html = requests.get(url, timeout=5)
+    
+    # Generate random user agents to not look suspicious:
+    headers = {'User-Agent': generate_user_agent(device_type="desktop", os=('mac', 'linux'))}
+   
+    url = link  
+    html = requests.get(url, timeout=5, headers=headers)
     soup = BeautifulSoup(html.text, 'lxml')
     script_tag = soup.find('script', text=re.compile('window\._sharedData'))
     shared_data = script_tag.string.partition('=')[-1].strip(' ;')
@@ -283,21 +277,22 @@ df_loc_detail = pd.DataFrame([s.to_dict() for s in loc_data])
 df_loc_detail = df_loc_detail[ df_loc_detail.Street != 'Location is too general' ]
 
 
-#### Flag the locations that are not related to food:
+## Append to existing data and pickle again:
+import pickle
+import os
+for o in [x for x in os.listdir('Instagram\\Data') if x.endswith(".pkl")]:
+    if 'insta_locations' in o:
+        df_loc_detail_old = pickle.load(o,'rb')
+        df_loc_detail_new = df_loc_detail_old.append(df_loc_detail).drop_duplicates().reset_index()
+        pickle.dump(df_loc_detail_new, open('Instagram\\Data\\insta_locations.pkl', 'wb'))
+    else:
+        pickle.dump(df_loc_detail, open('Instagram\\Data\\insta_locations.pkl', 'wb'))
 
-   
+
+#### Flag the locations that are related to food:
+
+# Separate file for testng/building model   
+      
       
             
-#num_likes = j['entry_data']['LocationsPage'][0]['graphql']['location']['edge_location_to_media']['edges'][n]['node']['edge_liked_by']['count']
-#num_comments = j['entry_data']['LocationsPage'][0]['graphql']['location']['edge_location_to_media']['edges'][n]['node']['edge_media_to_comment']['count']
-
-
-'''
-from geopy.geocoders import GoogleV3 #, Nominatim, Baidu
-key = 'AIzaSyCyRkIdvRQ0dVLVKJZeYeqQIbhpaGtaQYk' # Note the Google quota is 2.5k per 24h
-geolocator = GoogleV3(api_key=key) # Baidu() # Nominatim() # 
-'''
-import re
-import os
-import pickle
 
