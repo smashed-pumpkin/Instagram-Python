@@ -275,19 +275,30 @@ for position,link in enumerate(loc_distinct['Location Link']):
 #### Create a dataframe:
 df_loc_detail = pd.DataFrame([s.to_dict() for s in loc_data])
 df_loc_detail = df_loc_detail[ df_loc_detail.Street != 'Location is too general' ]
+df_loc_detail['Date of scrape'] = datetime.datetime.today().strftime('%Y-%m-%d %H:%M')
 
 
-## Append to existing data and pickle again:
+#### Append to existing data and pickle again:
 import pickle
 import os
 for o in [x for x in os.listdir('Instagram\\Data') if x.endswith(".pkl")]:
     if 'insta_locations' in o:
-        df_loc_detail_old = pickle.load(o,'rb')
-        df_loc_detail_new = df_loc_detail_old.append(df_loc_detail).drop_duplicates().reset_index()
+        df_loc_detail_old = pickle.load(open('Instagram\\Data\\'+o,'rb')).drop(['Date of scrape'], axis=1)        
+        df_loc_detail_new = df_loc_detail_old.append(df_loc_detail)
+        df_loc_detail_new = df_loc_detail_new.drop_duplicates(subset=df_loc_detail_new.columns.difference(['Date of scrape'])).reset_index()       
         pickle.dump(df_loc_detail_new, open('Instagram\\Data\\insta_locations.pkl', 'wb'))
     else:
         pickle.dump(df_loc_detail, open('Instagram\\Data\\insta_locations.pkl', 'wb'))
 
+
+'''
+#### Add place type using google's API:
+from geopy.geocoders import GoogleV3 #, Nominatim, Baidu
+from Instagram.InstaLogin import credentials
+
+key = credentials('login_googleAPI.txt')[0]
+geolocator = GoogleV3(api_key=key)
+'''
 
 #### Flag the locations that are related to food:
 
