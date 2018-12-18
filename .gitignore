@@ -1,0 +1,8 @@
+
+*.pkl
+*.pyc
+*.docx
+*.xlsx
+*.json
+Geolocation.py
+.ipynb_checkpoints/PostsClustering-checkpoint.ipynb
