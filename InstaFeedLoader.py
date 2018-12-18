@@ -8,6 +8,17 @@ import time
 import datetime
 
 
+# Open ChromeDriver and log in to Instagram:
+driver = webdriver.Chrome(locate("chromedriver.exe"))
+
+# Log into Instagram:
+login_info = credentials('login.txt')
+login(driver, login_info[0], login_info[1])
+time.sleep(2)
+
+
+
+
 ## Create an empty dictionary to which we will save data
 feed_dict = { 'Account':[],
               'Date':[], 
@@ -20,18 +31,6 @@ feed_dict = { 'Account':[],
               'Likes/Views':[]
               }
 
-
-# Open ChromeDriver and log in to Instagram:
-driver = webdriver.Chrome(locate("chromedriver.exe"))
-
-# Log into Instagram:
-login_info = credentials('login.txt')
-login(driver, login_info[0], login_info[1])
-time.sleep(2)
-"""
-driver.get('https://www.instagram.com/')
-time.sleep(1)
-"""
 
 ## Scroll down the page to load our sample of posts
 scroll_num=5
